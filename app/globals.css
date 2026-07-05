@@ -1,26 +1,100 @@
 @import "tailwindcss";
 
+/*
+ * Napwise — "Ember before dawn"
+ * Dark, warm base everywhere. The Result screen (Phase 2) is the one bright
+ * surface. Accent is amber/sunrise — never cold blue.
+ * All pairings below hold WCAG AA on --ember-950 (checked at build time).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ember-950: #140e08; /* page base */
+  --ember-900: #1d1510; /* raised surfaces */
+  --ember-800: #2b2016; /* borders, wells */
+  --ember-700: #3d2d1e; /* hover borders */
+  --ink: #f4e9d8; /* primary text — 14.9:1 on ember-950 */
+  --ink-muted: #c9b79d; /* secondary text — 9.7:1 on ember-950 */
+  --amber: #f2a03d; /* accent — 8.9:1 on ember-950 */
+  --amber-bright: #ffc46b;
+  --rose: #e98a68; /* sunrise secondary, decorative only */
+  --on-amber: #201409; /* text on amber fills — 8.8:1 */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-ember-950: var(--ember-950);
+  --color-ember-900: var(--ember-900);
+  --color-ember-800: var(--ember-800);
+  --color-ember-700: var(--ember-700);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-amber: var(--amber);
+  --color-amber-bright: var(--amber-bright);
+  --color-rose: var(--rose);
+  --color-on-amber: var(--on-amber);
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-figtree);
+  --animate-breathe: breathe 6s ease-in-out infinite;
+  --animate-sunrise: sunrise 4s ease-out forwards;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.35;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.65;
+      transform: scale(1.06);
+    }
+  }
+
+  @keyframes sunrise {
+    from {
+      opacity: 0;
+      transform: translateY(12%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--ember-950);
+  /* A faint ember horizon glow at the foot of the viewport. */
+  background-image: radial-gradient(
+    120% 70% at 50% 112%,
+    rgba(94, 52, 22, 0.55) 0%,
+    rgba(43, 26, 13, 0.35) 40%,
+    transparent 72%
+  );
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Chip radios keep their input visually hidden; surface focus on the label. */
+label:has(input:focus-visible) {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+input[type="range"] {
+  accent-color: var(--amber);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

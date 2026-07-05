@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Napwise
 
-## Getting Started
+The nap app that tells you when *not* to nap, learns what actually works for you, and never pretends to read your brain. Installable PWA. No login, no cloud — all data stays in `localStorage` on the device.
 
-First, run the development server:
+## Status: Phase 1 — the alarm gate
+
+Only the audio + alarm core is built (`/test-timer`). **Nothing else gets built until this passes on a physical iPhone.** If the alarm doesn't fire reliably, the answer is Capacitor, not more web features.
+
+### The iPhone test (do this first)
+
+1. Deploy to Netlify (see below) — the Wake Lock API needs HTTPS, so testing over `http://<lan-ip>:3000` will NOT keep the screen awake.
+2. Open the deployed site in iOS Safari → **Alarm lab**.
+3. Flip the ring/silent switch OFF silent and turn media volume up (iOS mutes Web Audio when the phone is on silent).
+4. Start a 10 min timer, put the phone down screen-up, **don't lock it**, let the screen dim on its own.
+5. Pass = the rising tone fires at zero and swells over ~45 s. Then run it again with White and Brown noise.
+
+Expected behavior encoded in the copy: Wake Lock prevents *automatic* screen-off, not a manual lock. iOS suspends audio if you manually lock the phone or background Safari.
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm run build      # static export → out/
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy (Netlify)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`netlify.toml` is already configured: build command `npm run build`, publish directory `out`. Either connect the repo in the Netlify UI or:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx netlify-cli deploy --prod
+```
 
-## Learn More
+## Architecture notes
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js App Router, static export** (`output: "export"`) — plain files, Capacitor-wrappable later with no rewrite.
+- **`lib/audio.ts`** — the whole Phase 1 risk. One `AudioContext` per session, created inside the start-button gesture (iOS unlock), noise + alarm share it. Noise is synthesized (white = random samples, brown = leaky-integrated white). The alarm (noise fade + rising 3-note motif swelling over ~45 s) is scheduled up front on the audio clock so it fires even if JS timers are throttled.
+- **`lib/wake-lock.ts`** — screen Wake Lock, re-acquired on `visibilitychange`, fails silently.
+- **`lib/storage.ts`** — the ONE persistence seam. Every localStorage read/write goes through it (swappable for Capacitor Preferences later). Keys are prefixed `napwise:`.
+- **`lib/i18n/`** — all copy behind an English dictionary from day one; Swedish is v1.5.
+- **`lib/types.ts`** — the full data model from the brief (Part 7), including fields v1 logs but doesn't use yet.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### localStorage shape
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Key | Type | Notes |
+| --- | --- | --- |
+| `napwise:hasOnboarded` | `boolean` | set after the one-screen intro (Phase 2) |
+| `napwise:settings` | `Settings` | sound, noise duration, volume, last check-in defaults, locale |
+| `napwise:sessions` | `NapSession[]` | full before/after log per nap (Phase 2) |
+| `napwise:dayCache` | `DayCache` | last-night's-sleep + wake time, cached per calendar day (Phase 2) |
+| `napwise:learn` | `LearnState` | read-card tracking (Phase 2) |
 
-## Deploy on Vercel
+See `lib/types.ts` for exact field definitions.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Build order (from the brief — do not reorder)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Phase 1 (done):** `/test-timer` — Wake Lock, synthesized white/brown noise, gentle-wake alarm ramp, honesty copy. **Gate: passes on a real iPhone.**
+2. **Phase 2:** check-in → recommendation engine (pure, unit-tested) → timer → wake → post-nap → result loop; Learn library (25 sourced cards); History + best-length insight; 3-tab nav.
+
+Kill list (never build): sleep-stage claims, snooze/+5 min, streaks, audio files, accounts, notifications/background alarms, paywall in the web app.
