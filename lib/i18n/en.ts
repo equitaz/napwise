@@ -12,13 +12,13 @@ export const en = {
   home: {
     phaseTag: "Phase 1 build",
     phaseNote:
-      "Right now Napwise is one thing: an alarm that has to prove itself on a real iPhone before anything else gets built.",
+      "Right now Napwise is one thing: an alarm that has to prove itself on a real phone before anything else gets built.",
     openLab: "Open the alarm lab",
   },
   testTimer: {
     title: "Alarm lab",
     subtitle:
-      "Phase 1 gate: if this alarm fires reliably with the screen dimmed, Napwise gets built. Test it on a real iPhone.",
+      "Phase 1 gate: if this alarm fires reliably with the screen dimmed, Napwise gets built. Test it on a real phone.",
     duration: "Length",
     sound: "Sound",
     soundSilent: "Silent",
@@ -34,7 +34,7 @@ export const en = {
     fallbackAlarm: "Not sure it'll work? Set your phone's own alarm too.",
     brightnessTip: "Tip: turn your screen brightness down.",
     wakeTitle: "Time to wake up",
-    wakeBody: "The tone keeps rising gently until you stop it.",
+    wakeBody: "The alarm keeps rising until you stop it.",
     awake: "I'm awake",
     announceStarted: (length: string) => `Timer started: ${length}.`,
     announceStopped: "Timer stopped.",

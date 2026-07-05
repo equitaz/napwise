@@ -16,8 +16,12 @@ import type { SoundKind } from "./types";
 
 const NOISE_FADE_TIME_CONSTANT = 1.5; // s — eases the noise out at wake time
 const RESUME_TIMEOUT_MS = 8000; // a blocked resume() hangs forever — surface it
-const ALARM_RAMP_SECONDS = 45; // the entire "gentle wake" feature
-const ALARM_PEAK_GAIN = 0.6;
+// Owner feedback from the device test: 45 s from near-silence was too slow and
+// too subtle. The wake is still a ramp (the honest "gentle wake"), but it now
+// starts clearly audible and reaches full loudness in ~12 s.
+const ALARM_RAMP_SECONDS = 12;
+const ALARM_START_GAIN = 0.05;
+const ALARM_PEAK_GAIN = 0.9;
 const ALARM_MAX_SECONDS = 5 * 60; // ring for at most 5 min, then give up
 const SILENT_FLOOR = 0.0001; // exponential ramps can't reach true zero
 
@@ -177,9 +181,10 @@ function createNoiseBuffer(ctx: AudioContext, sound: SoundKind): AudioBuffer {
 }
 
 /**
- * The gentle wake: a rising three-note motif (A4 → C♯5 → E5) that starts
- * near-silent and swells over ~45 s. Honest — no sleep-stage claims — and it
- * works because the context was unlocked by the start gesture.
+ * The wake alarm: a rising three-note motif (A5 → C♯6 → E6) in a bright
+ * triangle timbre, starting clearly audible and swelling to full loudness
+ * over ~12 s. Honest — no sleep-stage claims — and it works because the
+ * context was unlocked by the start gesture.
  */
 function scheduleAlarm(
   ctx: AudioContext,
@@ -187,12 +192,13 @@ function scheduleAlarm(
   alarmEndsAt: number,
 ): void {
   const osc = ctx.createOscillator();
-  osc.type = "sine";
+  // Triangle has harmonics, so it cuts through where a pure sine gets lost.
+  osc.type = "triangle";
 
   const note = ctx.createGain(); // per-note envelope
-  const swell = ctx.createGain(); // the 45 s sunrise ramp
+  const swell = ctx.createGain(); // the sunrise ramp
   note.gain.value = 0;
-  swell.gain.setValueAtTime(SILENT_FLOOR, alarmAt);
+  swell.gain.setValueAtTime(ALARM_START_GAIN, alarmAt);
   swell.gain.exponentialRampToValueAtTime(
     ALARM_PEAK_GAIN,
     alarmAt + ALARM_RAMP_SECONDS,
@@ -202,17 +208,17 @@ function scheduleAlarm(
   note.connect(swell);
   swell.connect(ctx.destination);
 
-  const NOTE_SECONDS = 0.5;
-  const NOTE_GAP = 0.28;
-  const PHRASE_REST = 1.3;
-  const MOTIF_HZ = [440, 554.37, 659.25];
+  const NOTE_SECONDS = 0.3;
+  const NOTE_GAP = 0.15;
+  const PHRASE_REST = 0.7;
+  const MOTIF_HZ = [880, 1108.73, 1318.51];
 
   let t = alarmAt;
   while (t < alarmEndsAt) {
     for (const freq of MOTIF_HZ) {
       osc.frequency.setValueAtTime(freq, t);
       note.gain.setValueAtTime(SILENT_FLOOR, t);
-      note.gain.exponentialRampToValueAtTime(1, t + 0.06);
+      note.gain.exponentialRampToValueAtTime(1, t + 0.02);
       note.gain.exponentialRampToValueAtTime(SILENT_FLOOR, t + NOTE_SECONDS);
       t += NOTE_SECONDS + NOTE_GAP;
     }

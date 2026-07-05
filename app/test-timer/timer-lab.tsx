@@ -305,7 +305,7 @@ export function TimerLab() {
           <div className="relative flex items-center justify-center">
             <div
               aria-hidden="true"
-              className="absolute size-72 rounded-full bg-amber/10 blur-3xl motion-safe:animate-breathe"
+              className="pointer-events-none absolute size-72 rounded-full bg-amber/10 blur-3xl motion-safe:animate-breathe"
             />
             <p
               aria-hidden="true"
@@ -367,9 +367,12 @@ export function TimerLab() {
       {isAlarm && (
         <section className="flex flex-1 flex-col items-center justify-center gap-10 py-10 text-center motion-safe:animate-sunrise">
           <div className="relative flex flex-col items-center gap-4">
+            {/* pointer-events-none is load-bearing: this glow paints (and
+                hit-tests) above the button below it, since positioned
+                elements sit over later non-positioned siblings. */}
             <div
               aria-hidden="true"
-              className="absolute -top-10 size-80 rounded-full bg-amber/25 blur-3xl motion-safe:animate-breathe"
+              className="pointer-events-none absolute -top-10 size-80 rounded-full bg-amber/25 blur-3xl motion-safe:animate-breathe"
             />
             <h1
               role="alert"
