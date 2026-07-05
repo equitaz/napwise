@@ -1,4 +1,4 @@
-import type { SoundKind } from "./types";
+import type { NoiseDuration, SoundKind } from "./types";
 
 /**
  * The whole Phase 1 risk lives in this file (brief, Parts 3 & 8).
@@ -31,7 +31,13 @@ export type StartOptions = {
   sound: SoundKind;
   volume: number; // 0–1, applies to noise only
   durationSeconds: number;
+  /** "first10" fades the noise out after 10 min — some people only want
+   * help falling asleep. Defaults to "whole". */
+  noiseDuration?: NoiseDuration;
 };
+
+const FIRST10_SECONDS = 10 * 60;
+const FIRST10_FADE_TIME_CONSTANT = 8; // slow, unnoticeable fade
 
 export class NapAudioEngine {
   private ctx: AudioContext | null = null;
@@ -78,25 +84,35 @@ export class NapAudioEngine {
     const alarmAt = startAt + options.durationSeconds;
     const alarmEndsAt = alarmAt + ALARM_MAX_SECONDS;
 
-    // Noise loop. For "silent" the buffer is zero-filled: inaudible, but it
-    // keeps the unlocked context rendering so the scheduled alarm still fires.
+    // Noise loop. For "silent" (or noise turned off) the buffer is
+    // zero-filled: inaudible, but it keeps the unlocked context rendering so
+    // the scheduled alarm still fires.
+    const noiseDuration = options.noiseDuration ?? "whole";
+    const audible = options.sound !== "silent" && noiseDuration !== "off";
     const source = ctx.createBufferSource();
-    source.buffer = createNoiseBuffer(ctx, options.sound);
+    source.buffer = createNoiseBuffer(ctx, audible ? options.sound : "silent");
     source.loop = true;
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.value =
-      options.sound === "silent" ? 0 : clampVolume(options.volume);
+    noiseGain.gain.value = audible ? clampVolume(options.volume) : 0;
     source.connect(noiseGain);
     noiseGain.connect(ctx.destination);
     source.start(startAt);
     source.stop(alarmEndsAt);
 
+    // "First 10 min": ease the noise out once the user is (hopefully) asleep.
+    if (audible && noiseDuration === "first10") {
+      noiseGain.gain.setTargetAtTime(
+        0,
+        startAt + FIRST10_SECONDS,
+        FIRST10_FADE_TIME_CONSTANT,
+      );
+    }
     // Fade the noise as the wake tone begins.
     noiseGain.gain.setTargetAtTime(0, alarmAt, NOISE_FADE_TIME_CONSTANT);
 
     this.noiseGain = noiseGain;
-    this.sound = options.sound;
+    this.sound = audible ? options.sound : "silent";
 
     scheduleAlarm(ctx, alarmAt, alarmEndsAt);
   }

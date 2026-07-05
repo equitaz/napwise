@@ -14,7 +14,7 @@ import type {
 
 const PREFIX = "napwise:";
 
-type StorageShape = {
+export type StorageShape = {
   hasOnboarded: boolean;
   settings: Settings;
   sessions: NapSession[];

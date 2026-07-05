@@ -16,6 +16,12 @@ export type ActivityAfter =
   | "kids"
   | "rest";
 
+export type FellAsleep = "yes" | "dozed" | "rest_only";
+
+export type SleepOnsetBucket = "immediate" | "<5" | "5-10" | "10-20" | "20+";
+
+export type Grogginess = "none" | "little" | "moderate" | "much";
+
 export type NapSession = {
   id: string;
   createdAt: string; // ISO
@@ -31,9 +37,9 @@ export type NapSession = {
   usedCaffeine: boolean; // logged in v1 even though the toggle ships in v1.5
   // after
   kssAfter: number | null;
-  fellAsleep: "yes" | "dozed" | "rest_only" | null;
-  sleepOnsetBucket: string | null; // "5-10" … null if didn't sleep
-  grogginess: "none" | "little" | "moderate" | "much" | null;
+  fellAsleep: FellAsleep | null;
+  sleepOnsetBucket: SleepOnsetBucket | null; // null if didn't sleep
+  grogginess: Grogginess | null;
   completedCheckin: boolean;
 };
 

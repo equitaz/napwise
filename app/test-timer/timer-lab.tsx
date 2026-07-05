@@ -8,6 +8,7 @@ import { patchSettings, useSettings } from "@/lib/settings-store";
 import type { SoundKind } from "@/lib/types";
 import { formatRemaining, useCountdownSeconds } from "@/lib/use-countdown";
 import { acquireWakeLock, type WakeLockHandle } from "@/lib/wake-lock";
+import { VolumeSlider } from "@/components/volume-slider";
 
 declare global {
   interface Window {
@@ -40,43 +41,6 @@ const chipBase =
 const chipOn = "border-amber bg-amber/15 text-amber-bright";
 const chipOff =
   "border-ember-700 text-ink-muted hover:border-amber/60 hover:text-ink";
-
-function VolumeSlider({
-  id,
-  value,
-  disabled,
-  onChange,
-  hint,
-}: {
-  id: string;
-  value: number;
-  disabled: boolean;
-  onChange: (volume: number) => void;
-  hint?: string;
-}) {
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="mb-3 block text-sm font-semibold uppercase tracking-[0.18em] text-ink-muted"
-      >
-        {dict.testTimer.volume}
-      </label>
-      <input
-        id={id}
-        type="range"
-        min={0}
-        max={1}
-        step={0.05}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="h-11 w-full disabled:opacity-40"
-      />
-      {hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>}
-    </div>
-  );
-}
 
 export function TimerLab() {
   const [phase, setPhase] = useState<"setup" | "napping">("setup");
@@ -197,7 +161,7 @@ export function TimerLab() {
           {dict.app.name}
         </Link>
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber">
-          {dict.home.phaseTag}
+          {dict.testTimer.tag}
         </p>
       </header>
 
@@ -276,6 +240,7 @@ export function TimerLab() {
 
           <VolumeSlider
             id="volume"
+            label={dict.testTimer.volume}
             value={settings.volume}
             disabled={settings.sound === "silent"}
             onChange={handleVolumeChange}
@@ -339,6 +304,7 @@ export function TimerLab() {
             <div className="w-full">
               <VolumeSlider
                 id="volume-napping"
+                label={dict.testTimer.volume}
                 value={settings.volume}
                 disabled={false}
                 onChange={handleVolumeChange}

@@ -17,6 +17,10 @@
   --amber-bright: #ffc46b;
   --rose: #e98a68; /* sunrise secondary, decorative only */
   --on-amber: #201409; /* text on amber fills — 8.8:1 */
+  /* The Result screen — the one bright surface in the app. */
+  --dawn: #f8ecd9;
+  --dawn-ink: #26170a; /* 13.8:1 on dawn */
+  --dawn-accent: #8a5416; /* 5.4:1 on dawn — AA for normal text */
 }
 
 @theme inline {
@@ -30,10 +34,26 @@
   --color-amber-bright: var(--amber-bright);
   --color-rose: var(--rose);
   --color-on-amber: var(--on-amber);
+  --color-dawn: var(--dawn);
+  --color-dawn-ink: var(--dawn-ink);
+  --color-dawn-accent: var(--dawn-accent);
   --font-display: var(--font-fraunces);
   --font-body: var(--font-figtree);
   --animate-breathe: breathe 6s ease-in-out infinite;
   --animate-sunrise: sunrise 4s ease-out forwards;
+  --animate-shimmer: shimmer 2.4s ease-in-out infinite;
+
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: scale(0.97);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.03);
+    }
+  }
 
   @keyframes breathe {
     0%,
